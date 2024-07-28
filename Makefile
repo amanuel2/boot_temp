@@ -6,7 +6,7 @@ PORT ?= 2333
 
 ### CLANG ROUTE
 CC := clang
-BOOT_CC_FLAGS := -target i386-none-elf -m16 -g -fno-pic -fno-pie
+BOOT_CC_FLAGS := -target i386-none-elf -m16 -g -fno-pic -fno-pie 
 BOOT_LD_FLAGS := -m elf_i386 
 CC_FLAGS := -target x86_64-none-elf -mcmodel=kernel -g -fno-pic -fno-pie
 KERNEL_LD_FLAGS := -n -m elf_x86_64
@@ -75,12 +75,12 @@ build: setup
     
 	cd arch/$(ARCH)/boot && $(AS) $(BOOT_CC_FLAGS) -o ../../../boot.o boot.s && cd ../../
 	#cd arch/$(ARCH)/boot && $(CC) $(BOOT_CC_FLAGS) -ffreestanding -c -o ../../../test.o test.c && cd ../../
-	$(LD) $(BOOT_LD_FLAGS) -T boot.lds -o boot.elf boot.o -nostdlib
+	$(LD) $(BOOT_LD_FLAGS) -Ttext 0 boot.o -o boot.elf  -nostdlib
 	$(OBJCOPY) -O binary boot.elf boot.bin
 
-	cd arch/$(ARCH)/boot && $(AS) $(BOOT_CC_FLAGS) -o ../../../setup.o setup.s && cd ../../
-	$(LD) $(BOOT_LD_FLAGS) -Ttext 0x10000 -o setup.elf setup.o
-	$(OBJCOPY) -O binary setup.elf $(SETUPBIN)
+	# cd arch/$(ARCH)/boot && $(AS) $(BOOT_CC_FLAGS) -o ../../../setup.o setup.s && cd ../../
+	# $(LD) $(BOOT_LD_FLAGS) -Ttext 0x10000 -o setup.elf setup.o
+	# $(OBJCOPY) -O binary setup.elf $(SETUPBIN)
 
 	# ARCH=$(ARCH) cargo build $(build_args)
 
@@ -88,7 +88,7 @@ build: setup
 	# $(OBJCOPY) -O binary kernel.elf kernel.bin
 
   # Combine boot sector and kernel
-	cat boot.bin setup.bin > os.img
+	cat boot.bin > os.img
 	#cp $(BOOTBIN) $(BOOTPATH)
 	#cp $(SETUPBIN) $(BOOTPATH)
 	#genisoimage -R -b $(BOOTIMG) -no-emul-boot -boot-load-size 4 -boot-info-table -V CR0S -v -o $(LOADERISO) $(ISODIR)

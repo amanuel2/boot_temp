@@ -1,19 +1,39 @@
-.section .boot, "ax"
-.code16
-
 stage1_start_code:
-    # Setup segs + save boot drive
-    xor %ax, %ax
-    mov %ax, %ss
-    # Set up stack so that it starts below Main.
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-    cld
+	sti
+	cld	
 
-    movb %dl, BOOT_DRIVE # save the C: or / drive
-    movw $0x7C00, %sp # lets not override bootloader code...
+	# setup segs as usual, done when going to differnt modes...
+	sti				# disable interrupts
+	cld				# clear the direction flag
+	mov	%cs, %ax		# set all segments to code
+	mov	%ax, %ds
+	mov	%ax, %es
+	mov	$INTERRUPT_STACK_SEGMENT, %ax     # set up the stack
+	mov	%ax, %ss
+	mov	$INTERRUPT_STACK_OFFSET, %sp # also prevents overwritten bootloader code..
+
+	# saveee
+    mov %dl, (BOOT_DRIVE) # save the C: or / drive
+
+	// Get partition status
+	// Offset 	Size 	Description
+	// 0x00 	1 byte 	Boot indicator bit flag: 0 = no, 0x80 = bootable (or "active")
+	// 0x01 	1 byte 	Starting head
+	// 0x02 	6 bits 	Starting sector (Bits 6-7 are the upper two bits for the Starting Cylinder field.)
+	// 0x03 	10 bits 	Starting Cylinder
+	// 0x04 	1 byte 	System ID
+	// 0x05 	1 byte 	Ending Head
+	// 0x06 	6 bits 	Ending Sector (Bits 6-7 are the upper two bits for the ending cylinder field)
+	// 0x07 	10 bits 	Ending Cylinder
+	// 0x08 	4 bytes 	Relative Sector (to start of partition -- also equals the partition's starting LBA value)
+	// 0x0C 	4 bytes 	Total Sectors in partition 
+
+	mov partition_stat, %di
+	mov $12, %cx
+	rep movsb
+
+
+
 
 
 advance:
@@ -23,6 +43,7 @@ advance:
 
     call _read_disk
 
+	// GO to stage 2
     mov $KERNEL_SEG, %ax
     mov %ax, %ds # data seg
     ljmp $KERNEL_SEG, $KERNEL_OFF # code seg
@@ -50,7 +71,5 @@ enter_prot_msg: .asciz "entering protected mode...\n"
 pmode_msg: .asciz "Now in 32-bit protected mode!"
 BOOT_DRIVE:  .byte 0
 mmap_ent:    .long 0
+partition_stat: .byte 0
 ########
-
-.org 510
-.word 0xaa55

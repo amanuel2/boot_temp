@@ -28,7 +28,7 @@ _read_disk:
 	mov	$0,%dh # head
 	mov	$2,%cl # sec
 
-
+	# inital msg
     lea loop_sec_msg, %si
     call puts16
 
@@ -38,28 +38,32 @@ _read_disk:
     mov $1, %al # we only want sec 2(1 total)
     mov $0x02, %ah
     int $0x13
-    
+
+	# DEBUGING (. per sec loaded)
+    mov $'.', %si
+    call puts16
+	#
+
     mov (sectors_left), %ax
-    cmp $0xffff, %ax
+    cmp $0xffff, %ax # is it initalized
     jne .loop_load
 
     # if we didnt get the sector
     # get size of kernel
-    mov	%es:(KERNEL_SIZE_OFF),%eax
-	shr	$9, %eax # / 2^9
-	inc	%eax
-
+    mov	%es:(KERNEL_SIZE_OFF),%eax # remember address of kernel + SIZE_OFF (16 bit addr mode)
+	shr	$9, %eax # / 2^9 (convert to blocks)
+	inc %eax
 
 .loop_load:
-    dec	%ax # just read a sector
-	mov	%ax,(sectors_left)
+    dec	%ax // just read a sector
+	mov	%ax, (sectors_left)
 	cmp	$0, %ax
     je .done # loaded all sectors
 
 .check:
-    add $SECTOR_SIZE, %bx
+    add $SECTOR_SIZE, %bx # did we reach seg end?
     cmp $0, %bx
-    jnz .next_sector
+    jnz .next_sector # no? find next sector
 
 	mov	%es, %ax     # retrieve seg register
 	add	$KERNEL_SEG, %ax # move to next 64k block
@@ -69,12 +73,12 @@ _read_disk:
     # advance by one and check if we reached sector limit
     inc %cl # remember we started with sector #2 in %cl for second bootloader
     mov (disk_sectors), %al
-    cmp %al, %cl
+    cmp %al, %cl # is this last sector? If it's not then since we moved go back to beg of loop
     jle .loop_init
 
     # if we reached max go back to sector 0
     # then load the next head
-    mov $1, %cl
+    mov $1, %cl # since we are going next head we need reset the sector #
     inc %dh # next head
     mov	(disk_heads), %al
 	cmp	%al, %dh
@@ -92,6 +96,8 @@ _read_disk:
 
 .done:
     call .reset
+	lea loop_done_msg, %si
+	call puts16
     ret
 
 ### LOADING SECTOR LOOP END
@@ -131,12 +137,6 @@ _read_disk:
     call puts16 
     hlt
 
-# Save the boot drive number passed by BIOS
-// .global save_boot_drive
-// save_boot_drive:
-//     movb %dl, disk
-//     ret
-
 
 
 ### DATA
@@ -146,6 +146,8 @@ err:
 
 loop_sec_msg:
     .asciz "going through loading loop...\r\n"
+
+loop_done_msg: .asciz "we are done, just loaded =) \r\n"
 
 disk_number:
 	.byte 0
