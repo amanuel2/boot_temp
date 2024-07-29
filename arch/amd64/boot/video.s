@@ -49,7 +49,7 @@ video_start:
 
   videofailed:
     mov	$videomsg, %esi
-    call _puts	
+    call puts16
     
   .halt_vid:
     hlt

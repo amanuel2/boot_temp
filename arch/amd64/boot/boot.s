@@ -7,6 +7,11 @@ _start:
 stage1_start:
 #  .space 90 # BIOS PARAM BLOCK (when not using linker)
 	.include "stage1.s"
+stage1_end:
+
+stage2_start:
+	#.include "stage2."
+stage2_end:
 
 # real 16bit mode addressing
 # BOOTBLOCK_START = BOOTBLOCK_SEGMENT<<4 + BOOTBLOCK_OFFSET

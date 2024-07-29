@@ -6,6 +6,7 @@
 # - amazing reference on x86 paging: https://cs4118.github.io/www/2023-1/lect/18-x86-paging.html
 # = another amazing read: https://web.archive.org/web/20230617201503/http://www.rcollins.org/articles/2mpages/2MPages.html
 
+
 stage2_start_code:
   cli
 # Includes

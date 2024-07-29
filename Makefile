@@ -78,9 +78,9 @@ build: setup
 	$(LD) $(BOOT_LD_FLAGS) -Ttext 0 boot.o -o boot.elf  -nostdlib
 	$(OBJCOPY) -O binary boot.elf boot.bin
 
-	# cd arch/$(ARCH)/boot && $(AS) $(BOOT_CC_FLAGS) -o ../../../setup.o setup.s && cd ../../
-	# $(LD) $(BOOT_LD_FLAGS) -Ttext 0x10000 -o setup.elf setup.o
-	# $(OBJCOPY) -O binary setup.elf $(SETUPBIN)
+	cd arch/$(ARCH)/boot && $(AS) $(BOOT_CC_FLAGS) -o ../../../setup.o setup.s && cd ../../
+	$(LD) $(BOOT_LD_FLAGS) -Ttext 0x10000 setup.o -o setup.elf -nostdlib
+	$(OBJCOPY) -O binary setup.elf $(SETUPBIN)
 
 	# ARCH=$(ARCH) cargo build $(build_args)
 
@@ -88,7 +88,7 @@ build: setup
 	# $(OBJCOPY) -O binary kernel.elf kernel.bin
 
   # Combine boot sector and kernel
-	cat boot.bin > os.img
+	cat boot.bin setup.bin > os.img
 	#cp $(BOOTBIN) $(BOOTPATH)
 	#cp $(SETUPBIN) $(BOOTPATH)
 	#genisoimage -R -b $(BOOTIMG) -no-emul-boot -boot-load-size 4 -boot-info-table -V CR0S -v -o $(LOADERISO) $(ISODIR)
